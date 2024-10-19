@@ -1,6 +1,6 @@
 #Role ExecutionRole
 resource "aws_iam_role" "execution_role" {
-  name               = "${var.application_name}-task-execution-role-${random_password.ecs_task_execution_role_name_sufixo.result}"
+  name               = "${var.application_name}-task-exec-${random_password.ecs_task_execution_role_name_sufixo.result}"
   path               = "/system/"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_policy.json
 }
@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "ecs_task_assume_policy" {
 
 #Anexando Policy
 resource "aws_iam_role_policy" "ecs_get_policy" {
-  name   = "${var.application_name}-task-execution-policy-${random_password.ecs_task_execution_role_name_sufixo.result}"
+  name   = "${var.application_name}-task-exec-${random_password.ecs_task_execution_role_name_sufixo.result}"
   role   = aws_iam_role.execution_role.id
   policy = data.aws_iam_policy_document.ecs_task_policy.json
 }
@@ -53,11 +53,11 @@ data "aws_iam_policy_document" "ecs_task_policy" {
 }
 
 resource "random_password" "ecs_task_execution_role_name_sufixo" {
-  length      = 10
+  length      = 5
   special     = false
   upper       = false
   lower       = false
   number      = true
   numeric     = true
-  min_numeric = 10
+  min_numeric = 5
 }

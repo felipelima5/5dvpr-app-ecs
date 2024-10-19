@@ -1,16 +1,16 @@
 resource "aws_ecs_service" "this" {
-  name            = "${var.application_name}-${var.env}"
+  name            = var.application_name
   cluster         = var.ecs_cluster_name
   task_definition = aws_ecs_task_definition.this.arn
-  desired_count   = var.service_desired_count
+  desired_count   = var.service_scalling.desired_count
 
-  deployment_minimum_healthy_percent = var.service_deployment_minimum_healthy_percent
-  deployment_maximum_percent         = var.service_deployment_maximum_percent
+  deployment_minimum_healthy_percent = var.service.deployment_minimum_healthy_percent
+  deployment_maximum_percent         = var.service.deployment_maximum_percent
 
   network_configuration {
     security_groups  = [aws_security_group.this.id]
-    subnets          = var.subnets_ids
-    assign_public_ip = var.service_assign_public_ip
+    subnets          = var.service.subnets_ids
+    assign_public_ip = var.service.assign_public_ip
   }
 
   tags = var.tags
@@ -23,27 +23,27 @@ resource "aws_ecs_service" "this" {
 
 
   capacity_provider_strategy {
-    capacity_provider = var.capacity_provider_fargate
-    weight            = var.capacity_provider_fargate_weight
+    capacity_provider = var.service.capacity_provider_fargate
+    weight            = var.service.capacity_provider_fargate_weight
   }
 
   capacity_provider_strategy {
-    capacity_provider = var.capacity_provider_fargate_spot
-    weight            = var.capacity_provider_fargate_spot_weight
+    capacity_provider = var.service.capacity_provider_fargate_spot
+    weight            = var.service.capacity_provider_fargate_spot_weight
   }
 }
 
 resource "aws_security_group" "this" {
-  name        = "${var.application_name}-svc-application"
-  description = "Allow Traffic Communication ${var.application_name}-svc-application"
-  vpc_id      = var.vpc_id
+  name        = "acl-${var.application_name}"
+  description = "Allow Traffic Communication ${var.application_name}"
+  vpc_id      = var.service.vpc_id
 
   ingress {
     description     = "Allow Traffic From ALB"
     from_port       = var.application_port
     to_port         = var.application_port
     protocol        = "tcp"
-    security_groups = var.security_group_alb
+    security_groups = var.loadbalancer_application.security_group
   }
 
   egress {
@@ -57,9 +57,9 @@ resource "aws_security_group" "this" {
 
 
 resource "aws_appautoscaling_target" "ecs_target_memory" {
-  max_capacity       = var.scalling_max_capacity 
-  min_capacity       = var.service_desired_count
-  resource_id        = "service/${var.ecs_cluster_name}/${var.application_name}-${var.env}"
+  max_capacity       = var.service_scalling.max_capacity
+  min_capacity       = var.service_scalling.desired_count
+  resource_id        = "service/${var.ecs_cluster_name}/${var.application_name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 
@@ -78,9 +78,9 @@ resource "aws_appautoscaling_policy" "replicas_memory" {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
 
-    target_value       = var.percentual_to_scalling_target
-    scale_in_cooldown  = var.time_to_scalling_in
-    scale_out_cooldown = var.time_to_scalling_out
+    target_value       = var.service_scalling.percentual_to_scalling_target
+    scale_in_cooldown  = var.service_scalling.time_to_scalling_in
+    scale_out_cooldown = var.service_scalling.time_to_scalling_out
   }
 
 
@@ -88,9 +88,9 @@ resource "aws_appautoscaling_policy" "replicas_memory" {
 
 
 resource "aws_appautoscaling_target" "ecs_target_cpu" {
-  max_capacity       = var.scalling_max_capacity 
-  min_capacity       = var.service_desired_count
-  resource_id        = "service/${var.ecs_cluster_name}/${var.application_name}-${var.env}"
+  max_capacity       = var.service_scalling.max_capacity
+  min_capacity       = var.service_scalling.desired_count
+  resource_id        = "service/${var.ecs_cluster_name}/${var.application_name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
 }
@@ -107,8 +107,8 @@ resource "aws_appautoscaling_policy" "replicas_cpu" {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
 
-    target_value       = var.percentual_to_scalling_target
-    scale_in_cooldown  = var.time_to_scalling_in
-    scale_out_cooldown = var.time_to_scalling_out
+    target_value       = var.service_scalling.percentual_to_scalling_target
+    scale_in_cooldown  = var.service_scalling.time_to_scalling_in
+    scale_out_cooldown = var.service_scalling.time_to_scalling_out
   }
 }

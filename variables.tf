@@ -1,58 +1,47 @@
-# ------- TaskDefinition -------------------
+# ------- TASK DEFINITION -------------------
+variable "task_definition" {
+  type = object({
+    requires_compatibilities                 = string
+    network_mode                             = string
+    cpu                                      = number
+    memory                                   = number
+    runtime_platform_operating_system_family = string
+    runtime_platform_cpu_architecture        = string # X86_64 / ARM64
+
+  })
+  default = {
+    requires_compatibilities                 = ""
+    network_mode                             = ""
+    cpu                                      = null
+    memory                                   = null
+    runtime_platform_operating_system_family = ""
+    runtime_platform_cpu_architecture        = "" # X86_64 / ARM64
+  }
+}
+
+variable "container_definitions" {
+  type = object({
+    image   = string
+    cpu     = number
+    memory  = number
+    command = string
+
+  })
+  default = {
+    image   = ""
+    cpu     = null
+    memory  = null
+    command = ""
+  }
+}
+
+
 variable "application_name" {
   type = string
 }
 
-variable "requires_compatibilities" {
-  type = string
-}
-
-variable "network_mode" {
-  type = string
-}
-
-variable "cpu" {
-  type = number
-}
-
-variable "memory" {
-  type = number
-}
-
-variable "container_definitions_image" {
-  type = string
-}
-
-variable "container_definitions_cpu" {
-  type = number
-}
-
-variable "container_definitions_memory" {
-  type = number
-}
-
-variable "container_definitions_memory_reservation" {
-  type = number
-}
-
 variable "region" {
   type = string
-}
-
-variable "container_definitions_command" {
-  type = string
-}
-
-variable "runtime_platform_operating_system_family" {
-  type = string
-}
-
-variable "runtime_platform_cpu_architecture" {
-  type = string
-}
-
-variable "cloudwatch_log_retention_in_days" {
-  type = number
 }
 
 variable "application_port" {
@@ -60,114 +49,112 @@ variable "application_port" {
 }
 
 
-# ------- Service -------------------
+# --------- SERVICE -----------
+variable "service_scalling" {
+  type = object({
+    desired_count                 = number
+    max_capacity                  = number
+    percentual_to_scalling_target = number
+    time_to_scalling_in           = number
+    time_to_scalling_out          = number
+
+  })
+  default = {
+    desired_count                 = null
+    max_capacity                  = null
+    percentual_to_scalling_target = null
+    time_to_scalling_in           = null
+    time_to_scalling_out          = null
+  }
+}
+
+variable "service" {
+  type = object({
+    capacity_provider_fargate        = string
+    capacity_provider_fargate_weight = number
+
+    capacity_provider_fargate_spot        = string
+    capacity_provider_fargate_spot_weight = number
+
+    deployment_minimum_healthy_percent = number
+    deployment_maximum_percent         = number
+    assign_public_ip                   = bool
+    vpc_id                             = string
+    subnets_ids                        = list(string)
+
+  })
+  default = {
+    capacity_provider_fargate        = ""
+    capacity_provider_fargate_weight = null
+
+    capacity_provider_fargate_spot        = ""
+    capacity_provider_fargate_spot_weight = null
+
+    deployment_minimum_healthy_percent = null
+    deployment_maximum_percent         = null
+    assign_public_ip                   = null
+    vpc_id                             = ""
+    subnets_ids                        = []
+  }
+}
 
 variable "ecs_cluster_name" {
   type = string
-}
-
-variable "service_desired_count" {
-  type = number
-}
-
-variable "service_deployment_minimum_healthy_percent" {
-  type = number
-}
-
-variable "service_deployment_maximum_percent" {
-  type = number
-}
-
-variable "service_assign_public_ip" {
-  type = bool
-}
-
-variable "vpc_id" {
-  type = string
-}
-
-variable "subnets_ids" {
-  type = list(string)
-}
-
-
-variable "security_group_alb" {
-  type = list(string)
 }
 
 variable "tags" {
   type = map(string)
 }
 
-# ------- LoadBalancer  ------------------- 
 
-variable "target_protocol" {
-  type = string
+# ------- LOAD BALANCER  -------------------
+variable "loadbalancer_application" {
+  type = object({
+    arn_listener           = string
+    listener_host_rule     = list(string)
+    priority_rule_listener = number
+    security_group         = list(string)
+    listener_paths         = list(string)
+
+  })
+  default = {
+    arn_listener           = ""
+    listener_host_rule     = []
+    priority_rule_listener = null
+    security_group         = []
+    listener_paths         = []
+  }
 }
 
-variable "target_protocol_version" {
-  type = string
-}
+variable "target_group" {
+  type = object({
+    name                      = string
+    protocol                  = string
+    protocol_version          = string
+    deregistration_delay      = number
+    health_check_path         = string
+    health_check_success_code = string
 
-variable "target_deregistration_delay" {
-  type = number
-}
-
-variable "target_health_check_path" {
-  type = string
-}
-
-variable "target_health_check_success_code" {
-  type = string
-}
-
-variable "alb_listener_host_rule" {
-  type = string
-}
-
-
-variable "env" {
-  type = string
-}
-
-variable "scalling_max_capacity" {
-  type = number
-}
-
-
-variable "percentual_to_scalling_target" {
-  type = number
-}
-
-variable "time_to_scalling_in" {
-  type = number
-}
-
-variable "time_to_scalling_out" {
-  type = number
+  })
+  default = {
+    name                      = ""
+    protocol                  = ""
+    protocol_version          = ""
+    deregistration_delay      = null
+    health_check_path         = ""
+    health_check_success_code = ""
+  }
 }
 
 
-variable "capacity_provider_fargate" {
-  type = string
-}
+# ------- OBSERVABILITY  -------------------
 
-variable "capacity_provider_fargate_weight" {
-  type = number
-}
+variable "observability" {
+  type = object({
+    cloudwatch_log_retention_in_days = number
 
-variable "capacity_provider_fargate_spot" {
-  type = string
-}
-
-variable "capacity_provider_fargate_spot_weight" {
-  type = number
-}
-
-variable "arn_listener_alb" {
-  type = string
-}
-
-variable "priority_rule_listener" {
-  type = number
+  })
+  default = {
+     cloudwatch_log_retention_in_days = null
+  }
 }
